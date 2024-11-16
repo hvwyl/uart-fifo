@@ -20,17 +20,17 @@ module uart_intf #(
     localparam CNT_MAX = CLK_FREQ/BAUD - 1;
     reg [$clog2(CNT_MAX)-1:0] cnt;
     wire cnt_flag;
-    assign cnt_flag = (cnt == CNT_MAX);
+    assign cnt_flag = (cnt == 'd0);
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             cnt <= 'b0;
         end
         else if (!o_tx_ready || !o_rx_valid) begin
-            if (cnt == CNT_MAX) begin
-                cnt <= 'b0;
+            if (cnt == 'd0) begin
+                cnt <= CNT_MAX;
             end
             else begin
-                cnt <= cnt + 'd1;
+                cnt <= cnt - 'd1;
             end
         end
     end
@@ -77,9 +77,15 @@ module uart_intf #(
     /* rx interface */
     reg rx1;
     reg rx2;
-    always @(posedge clk) begin
-        rx1 <= i_rx;
-        rx2 <= rx1;
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            rx1 <= 'b1;
+            rx2 <= 'b1;
+        end
+        else begin
+            rx1 <= i_rx;
+            rx2 <= rx1;
+        end
     end
 
     reg [3:0] rx_cnt;
